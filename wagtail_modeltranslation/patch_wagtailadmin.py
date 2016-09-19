@@ -72,6 +72,8 @@ class WagtailTranslator(object):
         if issubclass(model, Page):
             if hasattr(model, 'get_edit_handler'):
                 model.get_edit_handler.cache_clear()
+                if hasattr(model, 'edit_handler') and hasattr(model, 'edit_handler_set'):
+                    model.edit_handler_set()
                 edit_handler_class = model.get_edit_handler()
             else:
                 if model in PAGE_EDIT_HANDLERS:

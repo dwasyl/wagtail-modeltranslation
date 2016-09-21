@@ -563,3 +563,5 @@ def _patch_elasticsearch_fields(model):
                 translated_field = copy.deepcopy(field)
                 translated_field.field_name = build_localized_fieldname(field.field_name, lang[0])
                 model.search_fields = model.search_fields + (translated_field,)
+
+				

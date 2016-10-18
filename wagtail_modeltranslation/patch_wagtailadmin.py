@@ -44,6 +44,11 @@ class WagtailTranslator(object):
         WagtailTranslator._base_model = model
         WagtailTranslator._required_fields = {}
 
+        # Quick patch for Site models
+        if model.__name__ == "Site":
+            model.get_site_root_paths = _new_get_site_root_paths
+            return
+
         # CONSTRUCT TEMPORARY EDIT HANDLER
         if issubclass(model, Page):
             if hasattr(model, 'get_edit_handler'):
@@ -70,7 +75,7 @@ class WagtailTranslator(object):
 
             setattr(model, tab_name, patched_tab)
             
-            if hasattr(model, 'edit_handler') :
+            if hasattr(model, 'edit_handler'):
                 model.edit_handler.children[k].children = patched_tab
 
         # DELETE TEMPORARY EDIT HANDLER IN ORDER TO LET WAGTAIL RECONSTRUCT
@@ -146,9 +151,9 @@ class WagtailTranslator(object):
                     else :
                         #It happens if a custom tab panel is defined as list onto the edit_handler directly
                         tab_name = 'tab_panels_%d' % k
-                        
+
                     tabs += ((tab_name, copy.deepcopy(objlist.children)),)
-            else :
+            else:
                 if hasattr(defined_class, 'content_panels'):
                     tabs += (('content_panels', copy.deepcopy(defined_class.content_panels)),)
                 if hasattr(defined_class, 'promote_panels'):
@@ -421,6 +426,19 @@ def _new_route(self, request, path_components):
     """
     Rewrite route method in order to handle languages fallbacks
     """
+    ## copied from wagtailroutablepages/models.py mixin ##
+    if hasattr(self, 'resolve_subpage'):
+        if self.live:
+            try:
+                path = '/'
+                if path_components:
+                    path += '/'.join(path_components) + '/'
+
+                view, args, kwargs = self.resolve_subpage(path)
+                return RouteResult(self, args=(view, args, kwargs))
+            except Http404:
+                pass
+
     if path_components:
         # request is for a child of this page
         child_slug = path_components[0]
@@ -480,10 +498,10 @@ def _new_relative_url(self, current_site):
     Override for using custom get_site_root_paths() instead of
     Site.get_site_root_paths()
     """
-    for (id, root_path, root_url) in self.get_site_root_paths():
-        if self.url_path.startswith(root_path):
+    for (id, root_path, root_url) in self.specific.get_site_root_paths():
+        if self.specific.url_path.startswith(root_path):
             return ('' if current_site.id == id else root_url) + reverse('wagtail_serve',
-                                                                         args=(self.url_path[len(root_path):],))
+                                                                         args=(self.specific.url_path[len(root_path):],))
 
 
 @property

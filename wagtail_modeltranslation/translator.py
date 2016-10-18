@@ -69,19 +69,20 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
         """
         Create fields dicts without any translation fields.
         """
-        
+
         page_fields = ()
-        
-        self.page_fields = (
-            'title',
-            'slug',
-            'seo_title',
-            'search_description',
-            'url_path',)
-        
+
         if Page in model.__bases__:
-            page_fields = self.page_fields
-        
+            page_fields = (
+                'title',
+                'slug',
+                'seo_title',
+                'search_description',
+                'url_path',)
+
+#        if Page in model.__bases__:
+#            page_fields = self.page_fields
+
         self.model = model
         self.registered = False
         self.related = False
@@ -101,8 +102,9 @@ class TranslationOptions(with_metaclass(FieldsAggregationMetaClass, object)):
             else:
                 self._check_languages(self.required_languages.keys(), extra=('default',))
                 for fieldnames in self.required_languages.values():
-                    checkfields = self.page_fields if self.model == Page else self.fields
-                    if any(f not in checkfields for f in fieldnames):
+#                    checkfields = self.page_fields if self.model == Page else self.fields
+#                    if any(f not in self.fields for f in fieldnames):
+                    if any(f not in self.fields for f in fieldnames):
                         raise ImproperlyConfigured(
                             'Fieldname in required_languages which is not in fields option.')
 
